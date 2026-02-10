@@ -17,6 +17,21 @@ router.post('/', verifyFirebaseToken, async (req: any, res) => {
   res.json({ ok: true, event })
 })
 
+import { syncEventImagesToStorage } from '../utils/syncService'
+
+// POST /events/:slug/sync - manually sync images to storage
+router.post('/:slug/sync', async (req, res) => {
+    try {
+        const { slug } = req.params;
+        console.log(`Starting sync for ${slug}`);
+        const images = await syncEventImagesToStorage(slug);
+        res.json({ ok: true, count: images.length, images });
+    } catch (e: any) {
+        console.error('Sync failed', e);
+        res.status(500).json({ error: e.message || 'Sync failed' });
+    }
+});
+
 // GET /events/:slug - public event metadata
 router.get('/:slug', async (req, res) => {
   try {
@@ -24,7 +39,13 @@ router.get('/:slug', async (req, res) => {
     const event = await getEventBySlug(slug)
     if (!event) return res.status(404).json({ error: 'not found' })
 
+    // Prefer stored images if available
+    if ((event as any).images && (event as any).images.length > 0) {
+        return res.json({ event, images: (event as any).images })
+    }
+
     const user = await getUserById(event.userId)
+
 
     // If drive tokens are available, fetch image list (no caching)
     let images: any[] = []

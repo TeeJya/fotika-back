@@ -52,3 +52,10 @@ export async function listEventsForUser(uid: string) {
   const q = await eventsCol().where('userId', '==', uid).get()
   return q.docs.map(d => ({ id: d.id, ...(d.data() as any) } as Event))
 }
+
+export async function saveEventImages(slug: string, images: any[]) {
+    const q = await eventsCol().where('slug', '==', slug).limit(1).get()
+    if (q.empty) return;
+    const doc = q.docs[0].ref
+    await doc.set({ images }, { merge: true })
+}

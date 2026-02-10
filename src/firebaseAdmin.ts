@@ -96,4 +96,7 @@ function fallbackInit() {
   }
 }
 
+export const storage = admin.storage()
+export const bucket = storage.bucket(process.env.FIREBASE_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID || 'fotika-14660'}.appspot.com`)
+
 export default admin
