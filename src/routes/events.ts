@@ -80,10 +80,16 @@ router.get('/:slug/proxy/:fileId', async (req, res) => {
       ;(driveRes.data as any).pipe(res)
     } catch (err: any) {
         console.error('Drive proxy error', err)
-        if (err.response?.status === 403 || err.response?.status === 404) {
-             return res.status(err.response.status).json({ error: 'Image not reachable on Drive', details: err.message })
+        const status = err.response?.status || 500
+        const message = err.message || 'Unknown stream error'
+        
+        // Don't send JSON if headers were already sent or piping started
+        if (!res.headersSent) {
+             if (status === 403 || status === 404) {
+                 return res.status(status).json({ error: 'Image not reachable on Drive', details: message })
+             }
+             return res.status(500).json({ error: 'Error proxying image', details: message })
         }
-        res.status(500).json({ error: 'Error proxying image', details: err.message, stack: err.stack })
     }
 
   } catch (error: any) {
