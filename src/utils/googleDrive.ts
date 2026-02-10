@@ -6,6 +6,15 @@ dotenv.config()
 const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_OAUTH_REDIRECT_URI } = process.env
 
 export function createOAuthClient() {
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+      console.error('Google Credentials missing', {
+          clientId: !!GOOGLE_CLIENT_ID,
+          clientSecret: !!GOOGLE_CLIENT_SECRET,
+          redirectUri: GOOGLE_OAUTH_REDIRECT_URI
+      })
+      throw new Error('Google Credentials missing from Environment')
+  }
+
   return new google.auth.OAuth2(
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
