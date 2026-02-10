@@ -81,14 +81,14 @@ router.get('/:slug/proxy/:fileId', async (req, res) => {
     } catch (err: any) {
         console.error('Drive proxy error', err)
         if (err.response?.status === 403 || err.response?.status === 404) {
-             return res.status(err.response.status).send('Image not reachable on Drive')
+             return res.status(err.response.status).json({ error: 'Image not reachable on Drive', details: err.message })
         }
-        res.status(500).send('Error proxying image')
+        res.status(500).json({ error: 'Error proxying image', details: err.message, stack: err.stack })
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Proxy error:', error)
-    res.status(500).send('Internal server error')
+    res.status(500).json({ error: 'Internal server error', details: error.message })
   }
 })
 
