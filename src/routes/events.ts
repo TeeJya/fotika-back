@@ -1,5 +1,5 @@
 import express from 'express'
-import { nanoid } from 'nanoid'
+import { generateId } from '../utils/generateId'
 import { createEvent as dbCreateEvent, getEventBySlug, getUserById } from '../firestoreDb'
 import { createOAuthClient, listImagesInFolder, getFileStream } from '../utils/googleDrive'
 import { verifyFirebaseToken } from '../middleware/verifyFirebase'
@@ -12,7 +12,7 @@ router.post('/', verifyFirebaseToken, async (req: any, res) => {
   const userId = req.user?.uid
   if (!title || !driveFolderId || !userId) return res.status(400).json({ error: 'missing fields' })
 
-  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + nanoid(6)
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + generateId(6)
   const event = await dbCreateEvent({ slug, title, driveFolderId, userId, public: (visibility !== 'private') })
   res.json({ ok: true, event })
 })
