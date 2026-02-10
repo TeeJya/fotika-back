@@ -14,9 +14,9 @@
     "express": "^4.18.2",
     "googleapis": "^115.0.0",
     "jsonwebtoken": "^9.0.0",
-    "lowdb": "^6.0.1",
-    "nanoid": "^4.0.0"
-    ,"firebase-admin": "^11.10.0"
+    "nanoid": "^3.3.7",
+    "node-fetch": "^2.7.0",
+    "firebase-admin": "^11.10.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.12",
