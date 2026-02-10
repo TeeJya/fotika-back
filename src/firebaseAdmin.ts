@@ -6,12 +6,15 @@ import path from 'path'
 dotenv.config()
 
 const svc = process.env.FIREBASE_SERVICE_ACCOUNT
+console.log('DEBUG: FIREBASE_SERVICE_ACCOUNT env var is ' + (svc ? 'PRESENT' : 'MISSING') + (svc ? ` (length: ${svc.length})` : ''));
+
 let serviceAccount: any = undefined
 
 function tryParseJson(s: string) {
   try {
     return JSON.parse(s)
   } catch (e) {
+    console.log('DEBUG: JSON parse failed');
     return null
   }
 }
@@ -20,9 +23,11 @@ if (svc) {
   // If env value is a path to a file, read it
   try {
     if (fs.existsSync(svc) && fs.statSync(svc).isFile()) {
+      console.log(`DEBUG: reading service account from file: ${svc}`);
       const raw = fs.readFileSync(svc, 'utf8')
       serviceAccount = tryParseJson(raw)
     } else {
+      console.log('DEBUG: treating env var as content (JSON or Base64)');
       // Try JSON parse directly
       serviceAccount = tryParseJson(svc)
       // Check if it's an empty object (from empty env var)
@@ -32,6 +37,7 @@ if (svc) {
       
       if (!serviceAccount) {
         // Try base64 decode then parse
+        console.log('DEBUG: trying base64 decode');
         try {
           const decoded = Buffer.from(svc, 'base64').toString('utf8')
           serviceAccount = tryParseJson(decoded)
@@ -44,6 +50,12 @@ if (svc) {
     console.warn('Error reading FIREBASE_SERVICE_ACCOUNT:', e.message || e)
     serviceAccount = null
   }
+}
+
+if (serviceAccount) {
+    console.log('DEBUG: Service account parsed successfully. Project ID:', serviceAccount.project_id);
+} else {
+    console.log('DEBUG: Service account parsing FAILED or returned null.');
 }
 
 // If parsed but missing project_id, try to fill from env vars
