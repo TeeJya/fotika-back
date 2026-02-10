@@ -6,11 +6,6 @@ import { verifyFirebaseToken } from '../middleware/verifyFirebase'
 
 const router = express.Router()
 
-// Simple in-memory cache for Drive images
-// Map<folderId, { timestamp: number, images: any[] }>
-const driveCache = new Map<string, { timestamp: number, images: any[] }>()
-const CACHE_DURATION = 10 * 60 * 1000 // 10 minutes
-
 // POST /events - create event (protected)
 router.post('/', verifyFirebaseToken, async (req: any, res) => {
   const { title, driveFolderId, visibility } = req.body
@@ -31,34 +26,19 @@ router.get('/:slug', async (req, res) => {
 
     const user = await getUserById(event.userId)
 
-    // If drive tokens are available, fetch image list (with caching)
+    // If drive tokens are available, fetch image list (no caching)
     let images: any[] = []
     if (user && (user as any).driveTokens) {
       const folderId = event.driveFolderId
       
-      // Auto-clear cache if it gets too large to prevent memory leaks
-      if (driveCache.size > 100) {
-        driveCache.clear() 
-        console.log('Cache cleared due to size limit')
-      }
-
-      // Check cache first
-      const cached = driveCache.get(folderId)
-      if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
-        images = cached.images
-        console.log(`Serving images for ${folderId} from cache`)
-      } else {
-        const oauth = createOAuthClient()
-        oauth.setCredentials((user as any).driveTokens)
-        try {
-          images = await listImagesInFolder(oauth, folderId)
-          // Update cache
-          driveCache.set(folderId, { timestamp: Date.now(), images })
-          console.log(`Fetched images for ${folderId} from Drive and cached`)
-        } catch (err) {
-          console.error('Drive list error', err)
-          // Don't crash processing, just return empty images
-        }
+      const oauth = createOAuthClient()
+      oauth.setCredentials((user as any).driveTokens)
+      try {
+        images = await listImagesInFolder(oauth, folderId)
+        console.log(`Fetched images for ${folderId} from Drive`)
+      } catch (err) {
+        console.error('Drive list error', err)
+        // Don't crash processing, just return empty images
       }
     }
 
