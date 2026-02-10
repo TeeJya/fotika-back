@@ -53,18 +53,31 @@ router.get('/:slug', async (req, res) => {
 router.get('/:slug/proxy/:fileId', async (req, res) => {
   try {
     const { slug, fileId } = req.params
+    console.log(`DEBUG: Proxy request slug='${slug}' fileId='${fileId}'`);
+
     const event = await getEventBySlug(slug)
-    if (!event) return res.status(404).json({ error: 'Event not found' })
+    if (!event) {
+      console.log(`DEBUG: Event NOT found for slug='${slug}'`);
+      return res.status(404).json({ error: 'Event not found' })
+    }
+    console.log(`DEBUG: Event found (id=${event.id}, userId=${event.userId})`);
 
     const user = await getUserById(event.userId)
-    if (!user || !(user as any).driveTokens) {
-      return res.status(404).json({ error: 'User or tokens not found' })
+    if (!user) {
+      console.log(`DEBUG: User NOT found (userId=${event.userId})`);
+      return res.status(404).json({ error: 'User not found' })
+    }
+    
+    if (!(user as any).driveTokens) {
+      console.log(`DEBUG: User (${event.userId}) has NO driveTokens`);
+      return res.status(404).json({ error: 'User tokens not found' })
     }
 
     const oauth = createOAuthClient()
     oauth.setCredentials((user as any).driveTokens)
 
     try {
+      console.log(`DEBUG: Fetching file stream from Drive (fileId=${fileId})`);
       const driveRes = await getFileStream(oauth, fileId)
       
       // forward headers
